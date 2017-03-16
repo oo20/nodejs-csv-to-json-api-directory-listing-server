@@ -1,0 +1,21 @@
+{
+  "name": "nodejs_directory_listing_server",
+  "version": "0.0.1",
+  "description": "Simple directory listing server.",
+  "main": "server.js",
+  "dependencies": {
+    "nodemon": "*",
+    "forever": "*",
+    "express": "^4.15.2",
+    "body-parser": "^1.17.1",
+    "fast-csv": "^2.4.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "./node_modules/nodemon/bin/nodemon.js --exitcrash server.js"
+  },
+  "author": "Michael Steele",
+  "license": "UNLICENSED",
+  "private": true
+}

@@ -1,0 +1,9 @@
+firstName,lastName,birthdate,profilePicture,forceSensitive,affiliation
+"Luke","Skywalker","1963-05-05","07.png",true,"JEDI"
+"Leia","Organa","1963-05-05","06.png",true,"RESISTANCE" 
+"Han","Solo","1956-08-22","04.png",false,"RESISTANCE" 
+"Chewbacca","","1782-11-15","01.png",false,"RESISTANCE" 
+"Kylo","Ren","1987-10-31","05.jpg",true,"FIRST_ORDER" 
+"Supreme Leader","Snoke","1947-01-01","08.png",true,"FIRST_ORDER" 
+"General","Hux","1982-07-04","03.png",false,"FIRST_ORDER" 
+"Darth","Vader","1947-07-13","02.jpg",true,"SITH" 
