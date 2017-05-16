@@ -11,6 +11,8 @@ const fs = require('fs');
 var csv = require("fast-csv");
 var serverURL = config.serverURL;
 var imagesDir = config.imagesDir;
+var createHash = require('sha.js');
+var sha256 = createHash('sha256');
 
 module.exports = function (fileName) {
 	
@@ -19,31 +21,51 @@ module.exports = function (fileName) {
 		preload : function () {
 			this.get(null)
 		},
-		cachedData : null,
+		cachedData: null,
+		getCachedData: function () {
+			return cachedData;
+		},
+		getCachedDataToNumericArray: function () {
+			var numericArray = new Array();
+			for (var items in cachedData){
+				numericArray.push(cachedData[items]);
+			}
+			return numericArray;
+		},
+		header: null,
+		getHeader: function () {
+			return header;
+		},
+		columns: 0,
 		fetch : function (callBack) {
-			if (this.cachedData == null) {
+			if (this.getCachedData() === null) {
+				console.log('Server cache empty.  Getting data.');
 				this.get(callBack);
 			} else {
-				callBack(this.cachedData)
+				console.log('Using server cache.');
+				callBack(this.getCachedDataToNumericArray())
 			}
 		},
 		get : function (callBack) {
+
 			var stream = fs.createReadStream(fileName);
 		 
-			var header = null;
+			var output = {};
 
-			var columns = 0;
+			header = null;
 
-			var output = [];
+			columns = 0;
 
 			var csvStream = csv()
 			.on("data", function(data){
 				var out = {};
+				out["id"] = "";
 				if (header == null) {
 					header = data;
 					columns = header.length;
 					return
 				}
+				var dataToHash = "";
 				for (i = 0; i < columns; i++) {
 					var value = data[i];
 					if (value == "false") {
@@ -53,20 +75,83 @@ module.exports = function (fileName) {
 						value = true;
 					}
 					out[header[i]] = value;
+					dataToHash = dataToHash + value;
 				}
 				out['profilePicture'] = serverURL + imagesDir + out['profilePicture'];
-				
-				output.push(out);
+				var key = sha256.update(dataToHash, 'utf8').digest('hex')
+				out['id'] = key;
+				output[key] = out;
 			})
 			.on("end", function(){
 				console.log("Parsed " + fileName);
+				console.log("Count " +  Object.keys(output).length);
+				cachedData = output;
 				if (callBack != null) {
-					callBack(output);
+					callBack(getCachedDataToNumericArray());
 				}
-				this.cachedData = output;
 			});
 			 
 			stream.pipe(csvStream);
+		},
+		deleteById: function (id, callBack) {
+			index = id; // TO DO: Add parsing of ID
+			if (cachedData[index] != null) {
+				callBack(id, cachedData[index]);
+				delete cachedData[index];
+				console.log("Deleted " + id);
+			} else {
+				callBack(null,null);
+				console.log("Failed to delete " + id);
+			}
+		},
+		create: function (individual, callBack) {
+			data = individual;
+			// To Do: Ignore all fields but what is in header
+			// To Do: Validation needed 
+			var out = {};
+			out["id"] = "";
+			var dataToHash = "";
+			for (i = 0; i < columns; i++) {
+				var value = data[header[i]];
+				if (value == "false") {
+					value = false;
+				}
+				if (value == "true") {
+					value = true;
+				}
+				out[header[i]] = value;
+				dataToHash = dataToHash + value;
+			}
+
+			createdId = sha256.update(dataToHash, 'utf8').digest('hex')
+			out["id"] = createdId;
+			cachedData[createdId] = out;
+			console.log("Added individual:" + createdId);
+			callBack(createdId, out);
+		},
+		modify: function (modifiedId, individual, callBack) {
+			data = individual;
+			// To Do: Ignore all fields but what is in header
+			// To Do: Validation needed 
+			var out = cachedData[modifiedId];
+			console.log("Modified individual:" + modifiedId);
+			for (i = 0; i < columns; i++) {
+				if ([header[i] in data]) {
+					var value = data[header[i]];
+					if (value == "false") {
+						value = false;
+					}
+					if (value == "true") {
+						value = true;
+					}
+					out[header[i]] = value;
+					console.log("key " + header[i] + " = " + value);
+				}
+			}
+
+			out["id"] = modifiedId;
+			cachedData[modifiedId] = out;
+			callBack(modifiedId, out);
 		}
 	}
 };
