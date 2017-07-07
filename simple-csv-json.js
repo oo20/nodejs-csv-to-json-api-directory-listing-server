@@ -136,7 +136,7 @@ module.exports = function (fileName) {
 			var out = cachedData[modifiedId];
 			console.log("Modified individual:" + modifiedId);
 			for (i = 0; i < columns; i++) {
-				if ([header[i] in data]) {
+				if (header[i] in data) {
 					var value = data[header[i]];
 					if (value == "false") {
 						value = false;

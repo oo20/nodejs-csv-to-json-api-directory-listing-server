@@ -12,7 +12,11 @@ var bodyParser = require('body-parser');
 var path = require('path');
 var config = require("./config");
 var multer = require('multer'); // v1.0.5
-var upload = multer(); // for parsing multipart/form-data
+var storage = multer.memoryStorage();
+var upload = multer({
+	limits: { fieldSize: 25 * 1024 * 1024 },
+	storage: storage
+}); // for parsing multipart/form-data
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -59,10 +63,40 @@ router.put('/individual/modify/:id', upload.array(), function(req, res) {
 	});
 });
 
+router.post('/tempFile/:id', upload.any(), function (req, res, next) {
+	id = req.params.id;
+	console.log('Upload temp file for ' + id);
+	//Too verbose --- console.log(req);
+	fileData = Buffer.from(req.body.tempFile, 'base64')
+	tempFiles[id] = fileData;
+	//Too verbose --- console.log('Output of file: ' + tempFiles[id]);
+	console.log('Length of file: ' + tempFiles[id].length);
+	var out = {};
+	out['profilePicture'] = config.apiURL + "getTempFile/" + id + ".jpg";
+	directoryListing.modify(id, out, function(modifiedId, output){
+		res.json({"server":"ok"});
+	});
+});
+
+router.get('/getTempFile/:id.jpg', function (req, res) {
+	id = req.params.id;
+	console.log('Getting tempFile ' + id);
+	//Too verbose --- console.log('Getting data' + tempFiles[id]);
+	console.log('Length of file: ' + tempFiles[id].length);
+
+	res.writeHead(200, {
+		'Content-Type': 'image/jpeg',
+		//'Content-disposition': 'attachment;filename=' + id + '.jpg',
+		'Content-Length': tempFiles[id].length
+	});
+	res.end(tempFiles[id]);
+});
 
 app.use('/api', router);
 
 app.use('/static', express.static(path.join(__dirname, 'public')));
+
+var tempFiles = {};
 
 app.listen(port);
 console.log('Server at ' + config.serverURL + 'api/');
