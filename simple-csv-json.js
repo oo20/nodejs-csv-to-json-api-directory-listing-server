@@ -80,6 +80,7 @@ module.exports = function (fileName) {
 				out['profilePicture'] = serverURL + imagesDir + out['profilePicture'];
 				var key = sha256.update(dataToHash, 'utf8').digest('hex')
 				out['id'] = key;
+				out['imageCheck'] =  sha256.update(out['profilePicture'], 'utf8').digest('hex');
 				output[key] = out;
 			})
 			.on("end", function(){
@@ -125,6 +126,7 @@ module.exports = function (fileName) {
 
 			createdId = sha256.update(dataToHash, 'utf8').digest('hex')
 			out["id"] = createdId;
+			out["imageCheck"] =  sha256.update(out['profilePicture'], 'utf8').digest('hex');
 			cachedData[createdId] = out;
 			console.log("Added individual:" + createdId);
 			callBack(createdId, out);
@@ -150,6 +152,7 @@ module.exports = function (fileName) {
 			}
 
 			out["id"] = modifiedId;
+			out["imageCheck"] =  sha256.update(out['profilePicture'], 'utf8').digest('hex');
 			cachedData[modifiedId] = out;
 			callBack(modifiedId, out);
 		}

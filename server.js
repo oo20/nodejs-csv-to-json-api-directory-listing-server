@@ -12,6 +12,8 @@ var bodyParser = require('body-parser');
 var path = require('path');
 var config = require("./config");
 var multer = require('multer'); // v1.0.5
+var createHash = require('sha.js');
+var sha256 = createHash('sha256');
 var storage = multer.memoryStorage();
 var upload = multer({
 	limits: { fieldSize: 25 * 1024 * 1024 },
@@ -20,6 +22,10 @@ var upload = multer({
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+/*app.use(bodyParser.json({verify:function(req,res,buf){
+	req.rawBody=buf;
+	console.log('req.rawBody: ' + req.rawBody);
+}}));*/
 
 
 var port = process.env.PORT || config.port;
@@ -73,6 +79,7 @@ router.post('/tempFile/:id', upload.any(), function (req, res, next) {
 	console.log('Length of file: ' + tempFiles[id].length);
 	var out = {};
 	out['profilePicture'] = config.apiURL + "getTempFile/" + id + ".jpg";
+	out['imageCheck'] =  sha256.update(fileData, 'utf8').digest('hex');
 	directoryListing.modify(id, out, function(modifiedId, output){
 		res.json({"server":"ok"});
 	});
